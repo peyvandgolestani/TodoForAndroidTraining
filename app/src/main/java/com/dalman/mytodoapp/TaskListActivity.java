@@ -2,6 +2,7 @@ package com.dalman.mytodoapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -100,28 +101,34 @@ public class TaskListActivity extends AppCompatActivity
 
     private void showFilteredTasks(int id) {
         selectId = id;
-        List<Task> tasks = TaskStorageHelper.getInstance().getTasks();
-        ArrayList<Task> filtered = new ArrayList<>();
-        for (Task task : tasks) {
-            if (id == R.id.action_filter_all) {
-                filtered.add(task);
-
-            } else if (id == R.id.action_filter_ongoing) {
-                if (!task.isCompleted() && !task.isArchived()){
-                    filtered.add(task);
-                }
-
-            } else if (id == R.id.action_filter_completed){
-                if (task.isCompleted()) {
-                    filtered.add(task);
-                }
-            } else if (id == R.id.action_filter_archived){
-                    if (task.isArchived()){
+        TaskStorageHelper.getInstance().getTasks(new TaskStorageHelper.Callback() {
+            @Override
+            public void onData(List<Task> tasks) {
+                ArrayList<Task> filtered = new ArrayList<>();
+                for (Task task : tasks) {
+                    if (selectId == R.id.action_filter_all) {
                         filtered.add(task);
+
+                    } else if (selectId == R.id.action_filter_ongoing) {
+                        if (!task.isCompleted() && !task.isArchived()){
+                            filtered.add(task);
+                        }
+
+                    } else if (selectId == R.id.action_filter_completed){
+                        if (task.isCompleted()) {
+                            filtered.add(task);
+                        }
+                    } else if (selectId == R.id.action_filter_archived){
+                        if (task.isArchived()){
+                            filtered.add(task);
+                        }
+
+                    }
                 }
 
             }
-        }
+        });
+
         tasksAdapter.setTasks(filtered);
     }
 
@@ -142,10 +149,16 @@ public class TaskListActivity extends AppCompatActivity
             startActivity(intent);
 
         } else if (id == R.id.nav_statistic) {
-            Intent statisticIntent = new Intent(this, StatisticsActivity.class );
-            ArrayList<Task> tasks = new ArrayList<>(TaskStorageHelper.getInstance().getTasks());
-            statisticIntent.putParcelableArrayListExtra(KEY_TASKS, tasks);
-            startActivity(statisticIntent);
+
+            TaskStorageHelper.getInstance().getTasks(new TaskStorageHelper.Callback() {
+                @Override
+                public void onData(List<Task> tasks) {
+                    Intent statisticIntent = new Intent(TaskListActivity.this, StatisticsActivity.class );
+                    statisticIntent.putParcelableArrayListExtra(KEY_TASKS, new ArrayList<>(tasks);
+                    startActivity(statisticIntent);
+
+                }
+            });
 
 
         } else if (id == R.id.nav_information) {
@@ -223,6 +236,7 @@ public class TaskListActivity extends AppCompatActivity
                                 }
                             };
                             buttonView.post(runnable);
+
 
                         }
 
