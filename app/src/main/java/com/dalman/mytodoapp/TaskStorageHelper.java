@@ -1,62 +1,44 @@
 package com.dalman.mytodoapp;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public final class TaskStorageHelper {
+public final class TaskStorageHelper implements Handler.Callback {
     private static final TaskStorageHelper INSTANCE = new TaskStorageHelper();
-    private List<Task> tasks = new ArrayList<>();
+    private static final String TAG = "TaskStorageHelper";
+    private static final int MSG_SAVE_TASK = 10;
+    private static final int MSG_LOAD_TASKS = 20;
+    private final Handler bgHandler;
+    private final Handler mainHandler;
+    private DbHelper dbHelper;
+    private SQLiteDatabase database;
+    private Cursor cursor;
+
 
     private TaskStorageHelper() {
+        HandlerThread handlerThread = new HandlerThread(TAG);
+        handlerThread.start();
+        bgHandler = new Handler(handlerThread.getLooper(), this);
+        mainHandler = new Handler(Looper.getMainLooper(), this);
+
+
     }
 
     public void initStorage(Context context) {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyy-MM-dd");
-        tasks.clear();
-        Task first = new Task();
-        first.setId(1);
-        first.setTitle("Fixa ikonerna");
-        first.setDescription("Byt ut all ikoner i applikationen mot något mer lämpligt");
-        //first.setStarted(simpleDateFormat.parse("2016-11-24"));
-        tasks.add(first);
-        Task second = new Task();
-        second.setId(2);
-        second.setTitle("Fixa menyerna");
-        second.setDescription("Redigera menyn så den bara innehåller 'Statistics' och 'Information'. Lägg till skärmar för dessa.");
-        tasks.add(second);
-        Task third = new Task();
-        third.setId(3);
-        third.setTitle("Koppla ihop lista med detaljvy");
-        third.setDescription("Fixa så att ett klick på en task öppnar vald task i detaljvyn.");
-        tasks.add(third);
-        Task fourth = new Task();
-        fourth.setId(4);
-        fourth.setTitle("Spara och radera");
-        fourth.setDescription("Fixa så spara och radera-knapparna utför respektive funktion mot TaskStorageHelper.");
-        tasks.add(fourth);
-        Task fifth = new Task();
-        fifth.setId(5);
-        fifth.setTitle("Redigering i lista");
-        fifth.setDescription("Fixa så att ett klick på checkboxen i listan sparas ner.");
-        tasks.add(fifth);
-        Task sixth = new Task();
-        sixth.setId(6);
-        sixth.setTitle("Lägg till fält");
-        sixth.setDescription("Lägg till fält för när en task skapades och blev avklarad i Task. Dessa ska visas i detaljvyn.");
-        tasks.add(sixth);
-        Task seventh = new Task();
-        seventh.setId(7);
-        seventh.setTitle("Filtrering i listan");
-        seventh.setDescription("Koppla menyalternativen i menu.xml till att filtrera det som visas i listvyn (alla förutom arkiverade, endast aktiva, endast avklarade och endast arkiverade).");
-        tasks.add(seventh);
-        Task eighth = new Task();
-        eighth.setId(8);
-        eighth.setTitle("VG: Spara till databas");
-        eighth.setDescription("Fixa så att TaskStorageHelper sparas till en databas (SQLite eller Firebase).");
-        tasks.add(eighth);
+        dbHelper = new DbHelper(context);
+
     }
 
     public static TaskStorageHelper getInstance() {
@@ -64,24 +46,110 @@ public final class TaskStorageHelper {
     }
 
     public void saveTask(Task task) {
-        long nextId = 0;
-        for (Task existingTask : tasks) {
-            nextId = existingTask.getId() > nextId ? existingTask.getId() : nextId;
-            if (task.getId() == existingTask.getId()) {
-                existingTask.setTitle(task.getTitle());
-                existingTask.setDescription(task.getDescription());
-                existingTask.setCompleted(task.isCompleted());
-                existingTask.setArchived(task.isArchived());
-                return;
-            }
+         Message message = bgHandler.obtainMessage(MSG_SAVE_TASK, task);
+         message.sendToTarget();
+
+    }
+    public void  getTasks(Callback callback){
+        Message message = bgHandler.obtainMessage(MSG_LOAD_TASKS, callback);
+        message.sendToTarget();
+    }
+
+    public interface Callback {
+        void onData(List<Task>tasks);
+    }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        if (msg.what == MSG_SAVE_TASK){
+            internalSaveTask((Task) msg.obj);
+        } else if (msg.what == MSG_LOAD_TASKS){
+            internalLoadTasks((Callback) msg.obj);
         }
-        nextId++;
-        task.setId(nextId);
-        tasks.add(task);
+        return true;
     }
 
-    public List<Task> getTasks() {
+    private void internalLoadTasks(final Callback callback) {
+        SQLiteDatabase database = dbHelper.getReadableDatabase();
 
-        return tasks;
+        final List<Task> tasks = new ArrayList<>();
+        Cursor cursor = database.query("task", DbSchema.COLUMNS, null, null, null, null, null);
+        while (cursor.moveToNext()) {
+            Task task = new Task();
+            task.setId(cursor.getLong(cursor.getColumnIndex("_id")));
+            task.setTitle(cursor.getString(cursor.getColumnIndex("title")));
+            task.setDescription(cursor.getString(cursor.getColumnIndex("description")));
+            long timestamp = cursor.getLong(cursor.getColumnIndex("started"));
+            task.setStarted(new Date(timestamp));
+            int completed = cursor.getInt(cursor.getColumnIndex("completed"));
+            task.setCompleted(completed ==1);
+            int archived = cursor.getInt(cursor.getColumnIndex("archived"));
+            task.setArchived(archived ==1);
+            tasks.add(task);
+
+        }
+        Runnable runnable = new Runnable() {
+            public void run() {
+                callback.onData(tasks);
+            }
+        };
+        mainHandler.post(runnable);
+
+
     }
+
+    private void internalSaveTask(Task task) {
+        SQLiteDatabase database = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("title", task.getTitle());
+        values.put("description", task.getDescription());
+        values.put("started", task.getStarted().getTime());
+        values.put("completed", task.isCompleted());
+        values.put("archived", task.isArchived());
+
+        if (task.getId() ==0) {
+            database.insert("task", "", values );
+        } else {
+            database.update("task", values ,"_id = ?", new String[]{String.valueOf(task.getId())});
+        }
+
+
+    }
+
+    private static final class DbSchema {
+        public static final String CREATE_TASK_TABEL =
+                "CREATE TABLE task ( " +
+                        " _id  INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "title TEXT," +
+                        "desription TEXT," +
+                        "started INTEGER," +
+                        "completed INTEGER," +
+                        "archived INTEGER," +
+                        ")";
+        public static final    String[] COLUMNS = {"_id", "title", "description", "completed", "archived"};
+
+
+
+    }
+    private class DbHelper extends SQLiteOpenHelper {
+        private static final String DB_NAME = "task.db";
+        private static final int DB_VERSION = 1;
+
+        public DbHelper(Context context) {
+            super(context, DB_NAME, null, DB_VERSION );
+        }
+
+        @Override
+        public void onCreate(SQLiteDatabase db) {
+            db.execSQL(DbSchema.CREATE_TASK_TABEL);
+
+        }
+
+        @Override
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+        }
+    }
+
+
 }
