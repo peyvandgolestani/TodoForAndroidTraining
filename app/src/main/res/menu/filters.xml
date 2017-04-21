@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/action_filter_all"
         android:title="@string/label_all_tasks" />
-    <item android:id="@+id/action_ongoing"
+    <item android:id="@+id/action_filter_ongoing"
         android:title="@string/label_ongoing_tasks" />
     <item android:id="@+id/action_filter_completed"
         android:title="@string/label_completed_tasks" />

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="se.hellsoft.pia6todoapplication.TaskDetailActivity">
+    tools:context="com.dalman.mytodoapp.TaskDetailActivity">
 
     <!-- TODO: Update blank fragment layout -->
     <EditText

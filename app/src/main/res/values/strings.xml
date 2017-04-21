@@ -13,4 +13,11 @@
     <string name="hint_description">Description of the task</string>
     <string name="label_completed">Completed</string>
     <string name="label_all_tasks">All tasks</string>
+    <string name="label_tasks">Tasks</string>
+    <string name="label_add_task">Add Task</string>
+    <string name="label_statistic">Statistic</string>
+    <string name="label_information">Information</string>
+    <string name="label_ongoing_tasks">ongoing</string>
+    <string name="label_completed_tasks">completed</string>
+    <string name="label_archived_tasks">archived</string>
 </resources>

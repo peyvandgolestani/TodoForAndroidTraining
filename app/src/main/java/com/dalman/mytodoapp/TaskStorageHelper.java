@@ -1,7 +1,8 @@
-package se.hellsoft.pia6todoapplication;
+package com.dalman.mytodoapp;
 
 import android.content.Context;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +14,13 @@ public final class TaskStorageHelper {
     }
 
     public void initStorage(Context context) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyy-MM-dd");
         tasks.clear();
         Task first = new Task();
         first.setId(1);
         first.setTitle("Fixa ikonerna");
         first.setDescription("Byt ut all ikoner i applikationen mot något mer lämpligt");
+        //first.setStarted(simpleDateFormat.parse("2016-11-24"));
         tasks.add(first);
         Task second = new Task();
         second.setId(2);
@@ -78,6 +81,7 @@ public final class TaskStorageHelper {
     }
 
     public List<Task> getTasks() {
+
         return tasks;
     }
 }

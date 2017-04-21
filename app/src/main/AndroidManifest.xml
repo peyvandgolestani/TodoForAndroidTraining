@@ -10,15 +10,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="com.dalman.mytodoapp.TaskListActivity"
+            android:name=".TaskListActivity"
             android:label="@string/title_main"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.dalman.mytodoapp.TaskDetailActivity" />
+        <activity android:name=".TaskDetailActivity" />
+        <activity android:name=".StatisticsActivity" />
+        <activity android:name=".InformationActivity"></activity>
     </application>
 
 </manifest>

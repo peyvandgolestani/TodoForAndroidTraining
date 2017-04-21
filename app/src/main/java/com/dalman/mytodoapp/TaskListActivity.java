@@ -1,4 +1,4 @@
-package se.hellsoft.pia6todoapplication;
+package com.dalman.mytodoapp;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -25,6 +25,7 @@ import java.util.List;
 public class TaskListActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static final String KEY_TASKS = "tasks";
     private TasksAdapter tasksAdapter;
 
     @Override
@@ -92,34 +93,42 @@ public class TaskListActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_filter_all) {
-            // TODO Handle filtering here...
+
             return true;
-        }
+        } else if ()
 
         return super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(MenuItem item)
+    {
+
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        if (id == R.id.nav_tasks) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
+        else if (id == R.id.nav_add_task) {
+            Intent intent = new Intent(this, TaskDetailActivity.class);
+            startActivity(intent);
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_statistic) {
+            Intent statisticIntent = new Intent(this, StatisticsActivity.class );
+            ArrayList<Task> tasks = new ArrayList<>(TaskStorageHelper.getInstance().getTasks());
+            statisticIntent.putParcelableArrayListExtra(KEY_TASKS, tasks);
+            startActivity(statisticIntent);
 
-        } else if (id == R.id.nav_manage) {
 
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        } else if (id == R.id.nav_information) {
+            Intent intent = new Intent(this, InformationActivity.class);
+            startActivity(intent);
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
@@ -179,6 +188,18 @@ public class TaskListActivity extends AppCompatActivity
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         int position = getAdapterPosition();
                         Task task = tasks.get(position);
+
+                        if (task.isCompleted() != isChecked){
+                            task.setCompleted(isChecked);
+                            TaskStorageHelper.getInstance().saveTask(task);
+                            Runnable runnable = new Runnable(){
+
+                                public void run() {
+
+                                }
+                            };
+                        }
+
                         task.setCompleted(isChecked);
                     }
                 });

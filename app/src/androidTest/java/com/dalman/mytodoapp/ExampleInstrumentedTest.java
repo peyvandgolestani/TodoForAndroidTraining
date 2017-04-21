@@ -1,4 +1,4 @@
-package se.hellsoft.pia6todoapplication;
+package com.dalman.mytodoapp;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
