@@ -210,15 +210,19 @@ public class TaskListActivity extends AppCompatActivity
 
                 completed.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
                         int position = getAdapterPosition();
-                        Task task = tasks.get(position);
+                        final Task task = tasks.get(position);
 
                         if (task.isCompleted() != isChecked){
-                            task.setCompleted(isChecked);
-                            TaskStorageHelper.getInstance().saveTask(task);
-                            showFilteredTasks(selectId);
-
+                            Runnable runnable = new Runnable() {
+                                public void run() {
+                                    task.setCompleted(isChecked);
+                                    TaskStorageHelper.getInstance().saveTask(task);
+                                    showFilteredTasks(selectId);
+                                }
+                            };
+                            buttonView.post(runnable);
 
                         }
 
