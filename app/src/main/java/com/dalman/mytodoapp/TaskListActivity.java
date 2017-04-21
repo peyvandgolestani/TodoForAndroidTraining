@@ -27,6 +27,7 @@ public class TaskListActivity extends AppCompatActivity
 
     public static final String KEY_TASKS = "tasks";
     private TasksAdapter tasksAdapter;
+    private int selectId  = R.id.action_filter_all;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,14 +62,14 @@ public class TaskListActivity extends AppCompatActivity
         RecyclerView tasksList = (RecyclerView) findViewById(R.id.task_list);
         tasksAdapter = new TasksAdapter();
         tasksList.setAdapter(tasksAdapter);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        showFilteredTasks(selectId);
 
-        List<Task> tasks = TaskStorageHelper.getInstance().getTasks();
-        tasksAdapter.setTasks(tasks);
     }
 
     @Override
@@ -91,13 +92,37 @@ public class TaskListActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_filter_all) {
+        showFilteredTasks(id);
 
-            return true;
-        } else if ()
+        return true;
 
-        return super.onOptionsItemSelected(item);
+    }
+
+    private void showFilteredTasks(int id) {
+        selectId = id;
+        List<Task> tasks = TaskStorageHelper.getInstance().getTasks();
+        ArrayList<Task> filtered = new ArrayList<>();
+        for (Task task : tasks) {
+            if (id == R.id.action_filter_all) {
+                filtered.add(task);
+
+            } else if (id == R.id.action_filter_ongoing) {
+                if (!task.isCompleted() && !task.isArchived()){
+                    filtered.add(task);
+                }
+
+            } else if (id == R.id.action_filter_completed){
+                if (task.isCompleted()) {
+                    filtered.add(task);
+                }
+            } else if (id == R.id.action_filter_archived){
+                    if (task.isArchived()){
+                        filtered.add(task);
+                }
+
+            }
+        }
+        tasksAdapter.setTasks(filtered);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -192,15 +217,12 @@ public class TaskListActivity extends AppCompatActivity
                         if (task.isCompleted() != isChecked){
                             task.setCompleted(isChecked);
                             TaskStorageHelper.getInstance().saveTask(task);
-                            Runnable runnable = new Runnable(){
+                            showFilteredTasks(selectId);
 
-                                public void run() {
 
-                                }
-                            };
                         }
 
-                        task.setCompleted(isChecked);
+
                     }
                 });
             }
