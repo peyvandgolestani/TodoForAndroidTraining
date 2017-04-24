@@ -8,10 +8,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 
 public class TaskDetailActivity extends AppCompatActivity implements View.OnClickListener {
     public static final String KEY_TASK = "task";
     private Task task;
+
+    TaskStorageHelper storageHelper = TaskStorageHelper.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +46,9 @@ public class TaskDetailActivity extends AppCompatActivity implements View.OnClic
             description.setText(task.getDescription());
             CheckBox completed = (CheckBox) findViewById(R.id.completed);
             completed.setChecked(task.isCompleted());
+            TextView dataCreated = (TextView) findViewById(R.id.createData);
+            dataCreated.setText(task.getStarted().toString());
+
         }
 
     }
@@ -71,10 +77,28 @@ public class TaskDetailActivity extends AppCompatActivity implements View.OnClic
     }
 
     private void deleteTask() {
+        storageHelper.deleteTask(task);
 
+        finish();
     }
 
     private void saveOrCreateTask() {
+        if (task == null){
+            task = new Task();
+        }
+        EditText title = (EditText) findViewById(R.id.title);
+        String newTitle = title.getText().toString();
+        task.setTitle(newTitle);
+
+        EditText description = (EditText) findViewById(R.id.description);
+        String newDescription = description.getText().toString();
+        task.setDescription(newDescription);
+
+        CheckBox completed = (CheckBox) findViewById(R.id.completed);
+        task.setCompleted(completed.isChecked());
+
+        storageHelper.saveTask(task);
+        finish();
 
     }
 }
