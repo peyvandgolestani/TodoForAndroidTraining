@@ -45,6 +45,11 @@ public final class TaskStorageHelper implements Handler.Callback {
         return INSTANCE;
     }
 
+    public void deleteTask(Task task){
+        task.setArchived(true);
+        saveTask(task);
+    }
+
     public void saveTask(Task task) {
          Message message = bgHandler.obtainMessage(MSG_SAVE_TASK, task);
          message.sendToTarget();
@@ -119,15 +124,14 @@ public final class TaskStorageHelper implements Handler.Callback {
     private static final class DbSchema {
         public static final String CREATE_TASK_TABEL =
                 "CREATE TABLE task ( " +
-                        " _id  INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "_id  INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "title TEXT," +
-                        "desription TEXT," +
+                        "description TEXT," +
                         "started INTEGER," +
                         "completed INTEGER," +
-                        "archived INTEGER," +
+                        "archived INTEGER" +
                         ")";
-        public static final    String[] COLUMNS = {"_id", "title", "description", "completed", "archived"};
-
+        public static final    String[] COLUMNS = {"_id", "title", "description", "started", "completed", "archived"};
 
 
     }
@@ -140,9 +144,7 @@ public final class TaskStorageHelper implements Handler.Callback {
         }
 
         @Override
-        public void onCreate(SQLiteDatabase db) {
-            db.execSQL(DbSchema.CREATE_TASK_TABEL);
-
+        public void onCreate(SQLiteDatabase db) { db.execSQL(DbSchema.CREATE_TASK_TABEL);
         }
 
         @Override
