@@ -125,11 +125,11 @@ public class TaskListActivity extends AppCompatActivity
 
                     }
                 }
+                tasksAdapter.setTasks(filtered);
 
             }
         });
 
-        tasksAdapter.setTasks(filtered);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -154,7 +154,7 @@ public class TaskListActivity extends AppCompatActivity
                 @Override
                 public void onData(List<Task> tasks) {
                     Intent statisticIntent = new Intent(TaskListActivity.this, StatisticsActivity.class );
-                    statisticIntent.putParcelableArrayListExtra(KEY_TASKS, new ArrayList<>(tasks);
+                    statisticIntent.putParcelableArrayListExtra(KEY_TASKS, new ArrayList<>(tasks));
                     startActivity(statisticIntent);
 
                 }
